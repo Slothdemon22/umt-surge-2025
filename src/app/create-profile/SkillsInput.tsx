@@ -39,9 +39,25 @@ export function SkillsInput({ skills, onChange }: SkillsInputProps) {
 
   const addSkill = (skill: string) => {
     const trimmedSkill = skill.trim();
-    if (trimmedSkill && !skills.includes(trimmedSkill)) {
-      onChange([...skills, trimmedSkill]);
+    
+    if (!trimmedSkill) return;
+    
+    if (trimmedSkill.length > 50) {
+      alert('Skill name too long (max 50 characters)');
+      return;
     }
+    
+    if (skills.length >= 20) {
+      alert('Maximum 20 skills allowed');
+      return;
+    }
+    
+    if (skills.includes(trimmedSkill)) {
+      alert('This skill already exists');
+      return;
+    }
+    
+    onChange([...skills, trimmedSkill]);
     setInputValue('');
   };
 
@@ -66,6 +82,7 @@ export function SkillsInput({ skills, onChange }: SkillsInputProps) {
           onKeyDown={handleKeyDown}
           placeholder="Add a skill (e.g., React, Python, Design...)"
           className="glass-input"
+          maxLength={50}
         />
         <Button
           type="button"
@@ -127,7 +144,7 @@ export function SkillsInput({ skills, onChange }: SkillsInputProps) {
       </div>
 
       <p className="text-sm" style={{ color: 'var(--foreground)', opacity: 0.6 }}>
-        Added {skills.length} skill{skills.length !== 1 ? 's' : ''} • These help match you with relevant opportunities
+        Added {skills.length}/20 skill{skills.length !== 1 ? 's' : ''} • These help match you with relevant opportunities
       </p>
     </div>
   );

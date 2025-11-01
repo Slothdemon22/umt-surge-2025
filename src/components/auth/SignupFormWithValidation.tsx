@@ -13,6 +13,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Alert, AlertDescription } from '@/components/ui/alert'
+import { GoogleSignInButton } from './GoogleSignInButton'
 import {
   Form,
   FormControl,
@@ -151,6 +152,21 @@ export function SignupFormWithValidation() {
 
       {/* Form Card */}
       <div className="glass-card p-8">
+        {/* Google Sign In Button */}
+        <GoogleSignInButton redirectTo="/create-profile" label="Sign up with Google" />
+
+        {/* Divider */}
+        <div className="relative my-6">
+          <div className="absolute inset-0 flex items-center">
+            <div className="w-full border-t" style={{ borderColor: 'var(--border)' }}></div>
+          </div>
+          <div className="relative flex justify-center text-xs uppercase">
+            <span style={{ color: 'var(--foreground-muted)', backgroundColor: 'var(--card)', padding: '0 1rem' }}>
+              Or sign up with email
+            </span>
+          </div>
+        </div>
+
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
             {error && (

@@ -24,8 +24,8 @@ export function RoleSwitcher({ defaultRole = 'SEEKER', className = '' }: RoleSwi
       Cookies.remove(ACTIVE_ROLE_COOKIE)
       // Set new role in cookie
       Cookies.set(ACTIVE_ROLE_COOKIE, newRole, { expires: 30 })
-      // Hard reload the page
-      window.location.reload()
+      // Redirect to dashboard
+      window.location.href = '/dashboard'
     }
   }
 

@@ -1,6 +1,16 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
+// Admin emails list - must match the one in src/lib/admin/config.ts
+const ADMIN_EMAILS = [
+  'admin@campusconnect.com',
+]
+
+function isAdminEmail(email: string | null | undefined): boolean {
+  if (!email) return false
+  return ADMIN_EMAILS.includes(email.toLowerCase())
+}
+
 export async function updateSession(request: NextRequest) {
   let supabaseResponse = NextResponse.next({
     request,
@@ -53,10 +63,9 @@ export async function updateSession(request: NextRequest) {
     return NextResponse.redirect(url)
   }
 
-  // Admin routes check
+  // Admin routes check - using email-based check (same as dashboard)
   if (user && request.nextUrl.pathname.startsWith('/admin')) {
-    const userRole = user.user_metadata?.role || 'USER'
-    if (userRole !== 'ADMIN') {
+    if (!isAdminEmail(user.email)) {
       const url = request.nextUrl.clone()
       url.pathname = '/dashboard'
       return NextResponse.redirect(url)

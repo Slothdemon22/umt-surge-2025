@@ -39,9 +39,25 @@ export function InterestsInput({ interests, onChange }: InterestsInputProps) {
 
   const addInterest = (interest: string) => {
     const trimmedInterest = interest.trim();
-    if (trimmedInterest && !interests.includes(trimmedInterest)) {
-      onChange([...interests, trimmedInterest]);
+    
+    if (!trimmedInterest) return;
+    
+    if (trimmedInterest.length > 50) {
+      alert('Interest name too long (max 50 characters)');
+      return;
     }
+    
+    if (interests.length >= 20) {
+      alert('Maximum 20 interests allowed');
+      return;
+    }
+    
+    if (interests.includes(trimmedInterest)) {
+      alert('This interest already exists');
+      return;
+    }
+    
+    onChange([...interests, trimmedInterest]);
     setInputValue('');
   };
 
@@ -66,6 +82,7 @@ export function InterestsInput({ interests, onChange }: InterestsInputProps) {
           onKeyDown={handleKeyDown}
           placeholder="Add an interest (e.g., Startups, AI, Game Dev...)"
           className="glass-input"
+          maxLength={50}
         />
         <button
           type="button"
@@ -127,7 +144,7 @@ export function InterestsInput({ interests, onChange }: InterestsInputProps) {
       </div>
 
       <p className="text-sm" style={{ color: 'var(--foreground)', opacity: 0.6 }}>
-        Added {interests.length} interest{interests.length !== 1 ? 's' : ''} • These help us recommend relevant opportunities
+        Added {interests.length}/20 interest{interests.length !== 1 ? 's' : ''} • These help us recommend relevant opportunities
       </p>
     </div>
   );

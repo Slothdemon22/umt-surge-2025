@@ -14,8 +14,8 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const dbUser = await prisma.user.findUnique({
-      where: { id: user.id },
+    const dbUser = await prisma.profile.findUnique({
+      where: { userId: user.id },
       select: { stripeCustomerId: true },
     })
 
@@ -42,6 +42,8 @@ export async function POST(request: NextRequest) {
     )
   }
 }
+
+
 
 
 

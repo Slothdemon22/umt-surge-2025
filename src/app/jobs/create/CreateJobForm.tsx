@@ -2,7 +2,8 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Loader2, Save, Send, X, Plus } from 'lucide-react'
+import { Loader2, Save, Send, X, Plus, Sparkles } from 'lucide-react'
+import AIJobRefiner from '@/components/AIJobRefiner'
 
 const JOB_TYPES = [
   { value: 'ACADEMIC_PROJECT', label: 'Academic Project', description: 'Research, coursework, or academic collaborations' },
@@ -27,11 +28,28 @@ function TagsInput({ tags, onChange }: TagsInputProps) {
   const tagsArray = tags ? tags.split(',').map(t => t.trim()).filter(Boolean) : []
 
   const addTag = (tag: string): void => {
-    if (tag && !tagsArray.includes(tag)) {
-      const newTags = [...tagsArray, tag].join(', ')
-      onChange(newTags)
-      setInputValue('')
+    const trimmedTag = tag.trim()
+    
+    if (!trimmedTag) return
+    
+    if (trimmedTag.length > 50) {
+      alert('Tag name too long (max 50 characters)')
+      return
     }
+    
+    if (tagsArray.length >= 15) {
+      alert('Maximum 15 tags allowed')
+      return
+    }
+    
+    if (tagsArray.includes(trimmedTag)) {
+      alert('This tag already exists')
+      return
+    }
+    
+    const newTags = [...tagsArray, trimmedTag].join(', ')
+    onChange(newTags)
+    setInputValue('')
   }
 
   const removeTag = (tagToRemove: string): void => {
@@ -56,6 +74,7 @@ function TagsInput({ tags, onChange }: TagsInputProps) {
           onKeyDown={handleKeyDown}
           placeholder="Type a tag and press Enter"
           className="flex-1 glass-input"
+          maxLength={50}
         />
         <button
           type="button"
@@ -136,18 +155,100 @@ export function CreateJobForm({ profileId }: CreateJobFormProps) {
     setLoading(true)
 
     try {
-      // Validate required fields for published jobs
+      // Comprehensive Validation for published jobs
       if (!isDraft) {
-        if (!formData.title || !formData.type || !formData.description) {
-          setError('Please fill in all required fields (Title, Type, Description)')
+        if (!formData.title.trim()) {
+          setError('Job title is required')
+          setLoading(false)
+          return
+        }
+
+        if (formData.title.trim().length < 5) {
+          setError('Title must be at least 5 characters')
+          setLoading(false)
+          return
+        }
+
+        if (formData.title.trim().length > 200) {
+          setError('Title must be less than 200 characters')
+          setLoading(false)
+          return
+        }
+
+        if (!formData.type) {
+          setError('Please select an opportunity type')
+          setLoading(false)
+          return
+        }
+
+        if (!formData.description.trim()) {
+          setError('Description is required')
+          setLoading(false)
+          return
+        }
+
+        if (formData.description.trim().length < 50) {
+          setError('Description must be at least 50 characters')
+          setLoading(false)
+          return
+        }
+
+        if (formData.description.trim().length > 5000) {
+          setError('Description must be less than 5000 characters')
           setLoading(false)
           return
         }
       }
 
+      // Validate optional fields
+      if (formData.requirements && formData.requirements.length > 2000) {
+        setError('Requirements must be less than 2000 characters')
+        setLoading(false)
+        return
+      }
+
+      if (formData.duration && formData.duration.length > 100) {
+        setError('Duration must be less than 100 characters')
+        setLoading(false)
+        return
+      }
+
+      if (formData.compensation && formData.compensation.length > 200) {
+        setError('Compensation must be less than 200 characters')
+        setLoading(false)
+        return
+      }
+
+      if (formData.location && formData.location.length > 100) {
+        setError('Location must be less than 100 characters')
+        setLoading(false)
+        return
+      }
+
+      if (formData.teamSize && formData.teamSize.length > 100) {
+        setError('Team size must be less than 100 characters')
+        setLoading(false)
+        return
+      }
+
       const tagsArray = formData.tags
         ? formData.tags.split(',').map((tag: string) => tag.trim()).filter(Boolean)
         : []
+
+      if (tagsArray.length > 15) {
+        setError('Maximum 15 tags allowed')
+        setLoading(false)
+        return
+      }
+
+      // Validate each tag length
+      for (const tag of tagsArray) {
+        if (tag.length > 50) {
+          setError('Tag name too long (max 50 characters)')
+          setLoading(false)
+          return
+        }
+      }
 
       const response = await fetch('/api/jobs', {
         method: 'POST',
@@ -170,7 +271,7 @@ export function CreateJobForm({ profileId }: CreateJobFormProps) {
 
       // Redirect based on draft status
       if (isDraft) {
-        router.push('/jobs/my-jobs?tab=drafts')
+        router.push('/drafts')
       } else {
         router.push(`/jobs/${data.job.id}`)
       }
@@ -186,6 +287,19 @@ export function CreateJobForm({ profileId }: CreateJobFormProps) {
     setFormData((prev) => ({ ...prev, [field]: value }))
   }
 
+  const handleAIResult = (result: any): void => {
+    setFormData({
+      ...formData,
+      title: result.title,
+      description: result.description,
+      requirements: result.requirements,
+      duration: result.duration,
+      teamSize: result.teamSize,
+      compensation: result.compensation,
+      tags: result.suggestedTags.join(', '),
+    })
+  }
+
   return (
     <form className="space-y-8" onSubmit={(e) => e.preventDefault()}>
       {error && (
@@ -196,6 +310,38 @@ export function CreateJobForm({ profileId }: CreateJobFormProps) {
           <p className="text-sm font-medium" style={{ color: '#dc2626' }}>{error}</p>
         </div>
       )}
+
+      {/* AI Job Generator/Refiner */}
+      <div className="glass-card p-8 space-y-4 border-2" style={{ borderColor: '#8B5CF6' }}>
+        <div className="flex items-center gap-3 mb-4">
+          <span className="text-3xl">🤖</span>
+          <div>
+            <h2 className="text-2xl font-bold flex items-center gap-2" style={{ color: 'var(--foreground)' }}>
+              <Sparkles className="w-6 h-6 text-purple-600" />
+              AI Job Generator
+            </h2>
+            <p className="text-sm" style={{ color: 'var(--foreground-muted)' }}>
+              Let AI help you create a professional, compelling job posting instantly!
+            </p>
+          </div>
+        </div>
+
+        <AIJobRefiner
+          role={formData.title}
+          currentDescription={formData.description}
+          currentRequirements={formData.requirements}
+          duration={formData.duration}
+          compensation={formData.compensation}
+          type={formData.type}
+          onApply={handleAIResult}
+        />
+
+        <div className="p-3 rounded-lg bg-purple-50 border border-purple-200">
+          <p className="text-xs text-purple-800">
+            💡 <strong>Tip:</strong> Enter a job title and click "Generate from Role" to create a complete job posting, or fill in some fields and click "Refine with AI" to improve your existing content!
+          </p>
+        </div>
+      </div>
 
       {/* Basic Information */}
       <div className="glass-card p-8 space-y-6">
@@ -214,6 +360,8 @@ export function CreateJobForm({ profileId }: CreateJobFormProps) {
             placeholder="e.g., Looking for Full-Stack Developer for EdTech Startup"
             className="w-full glass-input"
             required
+            minLength={5}
+            maxLength={200}
           />
         </div>
 
@@ -231,7 +379,7 @@ export function CreateJobForm({ profileId }: CreateJobFormProps) {
                   formData.type === type.value ? 'ring-2' : ''
                 }`}
                 style={{
-                  ringColor: formData.type === type.value ? 'var(--accent)' : 'transparent',
+                  outlineColor: formData.type === type.value ? 'var(--accent)' : 'transparent',
                   borderColor: formData.type === type.value ? 'var(--accent)' : 'var(--border)',
                 }}
               >
@@ -259,9 +407,11 @@ export function CreateJobForm({ profileId }: CreateJobFormProps) {
             rows={6}
             className="w-full glass-input resize-none"
             required
+            minLength={50}
+            maxLength={5000}
           />
           <p className="text-sm mt-1" style={{ color: 'var(--foreground-muted)' }}>
-            Provide a detailed description to attract the right candidates
+            {formData.description.length}/5000 characters (minimum 50) - Provide a detailed description
           </p>
         </div>
       </div>
@@ -283,7 +433,11 @@ export function CreateJobForm({ profileId }: CreateJobFormProps) {
               placeholder="e.g., React, Node.js, 2+ years experience"
               rows={4}
               className="w-full glass-input resize-none"
+              maxLength={2000}
             />
+            <p className="text-xs mt-1" style={{ color: 'var(--foreground-muted)' }}>
+              {formData.requirements.length}/2000 characters
+            </p>
           </div>
 
           <div>
@@ -296,6 +450,7 @@ export function CreateJobForm({ profileId }: CreateJobFormProps) {
               onChange={(e) => updateField('duration', e.target.value)}
               placeholder="e.g., 3-6 months, Full semester"
               className="w-full glass-input"
+              maxLength={100}
             />
           </div>
 
@@ -309,6 +464,7 @@ export function CreateJobForm({ profileId }: CreateJobFormProps) {
               onChange={(e) => updateField('compensation', e.target.value)}
               placeholder="e.g., Unpaid, $500/month, Equity"
               className="w-full glass-input"
+              maxLength={200}
             />
           </div>
 
@@ -338,6 +494,7 @@ export function CreateJobForm({ profileId }: CreateJobFormProps) {
               onChange={(e) => updateField('teamSize', e.target.value)}
               placeholder="e.g., 2-3 members, 1 developer"
               className="w-full glass-input"
+              maxLength={100}
             />
           </div>
 

@@ -15,6 +15,7 @@ import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { isAdminEmail } from '@/lib/admin/config'
+import { GoogleSignInButton } from './GoogleSignInButton'
 import {
   Form,
   FormControl,
@@ -86,6 +87,21 @@ export function LoginFormWithValidation() {
 
       {/* Form Card */}
       <div className="glass-card p-8">
+        {/* Google Sign In Button */}
+        <GoogleSignInButton redirectTo="/dashboard" label="Continue with Google" />
+
+        {/* Divider */}
+        <div className="relative my-6">
+          <div className="absolute inset-0 flex items-center">
+            <div className="w-full border-t" style={{ borderColor: 'var(--border)' }}></div>
+          </div>
+          <div className="relative flex justify-center text-xs uppercase">
+            <span style={{ color: 'var(--foreground-muted)', backgroundColor: 'var(--card)', padding: '0 1rem' }}>
+              Or continue with email
+            </span>
+          </div>
+        </div>
+
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
             {error && (

@@ -3,11 +3,18 @@
  * 
  * Add admin emails here to grant admin access
  * These users will have full access to admin dashboard and job approval
+ * 
+ * HOW TO ADD YOURSELF AS ADMIN:
+ * 1. Add your email to the array below
+ * 2. Restart the dev server
+ * 3. Look for the "Admin" link (with shield icon) in the navbar
+ * 4. Click to access the admin dashboard
  */
 
 export const ADMIN_EMAILS = [
   'admin@campusconnect.com',
   // Add more admin emails here as needed
+  // Example: 'yourname@example.com',
 ];
 
 /**

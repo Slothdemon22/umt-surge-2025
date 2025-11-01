@@ -63,25 +63,45 @@ interface Job {
 }
 
 interface JobCounts {
-  ALL: number;
-  PENDING: number;
-  APPROVED: number;
-  REJECTED: number;
-  POSTED: number;
+  status: {
+    ALL: number;
+    PENDING: number;
+    APPROVED: number;
+    REJECTED: number;
+  };
+  type: {
+    ALL: number;
+    ACADEMIC_PROJECT: number;
+    STARTUP_COLLABORATION: number;
+    PART_TIME_JOB: number;
+    COMPETITION_HACKATHON: number;
+  };
 }
+
+type JobStatusFilter = 'ALL' | 'PENDING' | 'APPROVED' | 'REJECTED';
+type JobTypeFilter = 'ALL' | 'ACADEMIC_PROJECT' | 'STARTUP_COLLABORATION' | 'PART_TIME_JOB' | 'COMPETITION_HACKATHON';
 
 export function AdminDashboard({ userId }: AdminDashboardProps) {
   const [users, setUsers] = useState<User[]>([])
   const [jobs, setJobs] = useState<Job[]>([])
   const [jobCounts, setJobCounts] = useState<JobCounts>({
-    ALL: 0,
-    PENDING: 0,
-    APPROVED: 0,
-    REJECTED: 0,
-    POSTED: 0,
+    status: {
+      ALL: 0,
+      PENDING: 0,
+      APPROVED: 0,
+      REJECTED: 0,
+    },
+    type: {
+      ALL: 0,
+      ACADEMIC_PROJECT: 0,
+      STARTUP_COLLABORATION: 0,
+      PART_TIME_JOB: 0,
+      COMPETITION_HACKATHON: 0,
+    },
   })
   const [loading, setLoading] = useState(true)
-  const [jobStatusFilter, setJobStatusFilter] = useState<'ALL' | 'PENDING' | 'APPROVED' | 'REJECTED' | 'POSTED'>('PENDING')
+  const [jobStatusFilter, setJobStatusFilter] = useState<JobStatusFilter>('PENDING')
+  const [jobTypeFilter, setJobTypeFilter] = useState<JobTypeFilter>('ALL')
   const [searchTerm, setSearchTerm] = useState('')
   const [rejectionReason, setRejectionReason] = useState<{ [key: string]: string }>({})
   const [processingJobId, setProcessingJobId] = useState<string | null>(null)
@@ -89,7 +109,7 @@ export function AdminDashboard({ userId }: AdminDashboardProps) {
   useEffect(() => {
     fetchUsers()
     fetchJobs()
-  }, [jobStatusFilter])
+  }, [jobStatusFilter, jobTypeFilter])
 
   const fetchUsers = async (): Promise<void> => {
     try {
@@ -107,7 +127,7 @@ export function AdminDashboard({ userId }: AdminDashboardProps) {
 
   const fetchJobs = async (): Promise<void> => {
     try {
-      const response = await fetch(`/api/admin/jobs?status=${jobStatusFilter}`)
+      const response = await fetch(`/api/admin/jobs?status=${jobStatusFilter}&type=${jobTypeFilter}`)
       if (response.ok) {
         const data = await response.json()
         setJobs(data.jobs)
@@ -207,7 +227,7 @@ export function AdminDashboard({ userId }: AdminDashboardProps) {
             <Clock className="h-4 w-4 text-yellow-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{jobCounts.PENDING}</div>
+            <div className="text-2xl font-bold">{jobCounts.status.PENDING}</div>
             <p className="text-xs text-muted-foreground">
               Awaiting approval
             </p>
@@ -220,7 +240,7 @@ export function AdminDashboard({ userId }: AdminDashboardProps) {
             <CheckCircle className="h-4 w-4 text-green-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{jobCounts.APPROVED + jobCounts.POSTED}</div>
+            <div className="text-2xl font-bold">{jobCounts.status.APPROVED}</div>
             <p className="text-xs text-muted-foreground">
               Approved and live
             </p>
@@ -233,7 +253,7 @@ export function AdminDashboard({ userId }: AdminDashboardProps) {
             <FileText className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{jobCounts.ALL}</div>
+            <div className="text-2xl font-bold">{jobCounts.status.ALL}</div>
             <p className="text-xs text-muted-foreground">
               All jobs created
             </p>
@@ -246,7 +266,7 @@ export function AdminDashboard({ userId }: AdminDashboardProps) {
         <TabsList className="grid w-full grid-cols-2">
           <TabsTrigger value="jobs">
             <FileText className="h-4 w-4 mr-2" />
-            Job Approvals ({jobCounts.PENDING})
+            Job Approvals ({jobCounts.status.PENDING})
           </TabsTrigger>
           <TabsTrigger value="users">
             <Users className="h-4 w-4 mr-2" />
@@ -258,25 +278,79 @@ export function AdminDashboard({ userId }: AdminDashboardProps) {
         <TabsContent value="jobs" className="space-y-4">
           <Card>
             <CardHeader>
-              <div className="flex items-center justify-between">
-                <div>
-                  <CardTitle>Job Approval Management</CardTitle>
-                  <CardDescription>
-                    Review and approve or reject job postings
-                  </CardDescription>
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <CardTitle>Job Approval Management</CardTitle>
+                    <CardDescription>
+                      Review and approve or reject job postings
+                    </CardDescription>
+                  </div>
                 </div>
-                <div className="flex gap-2">
-                  {(['ALL', 'PENDING', 'APPROVED', 'REJECTED', 'POSTED'] as const).map((status) => (
+                
+                {/* Status Filters */}
+                <div>
+                  <p className="text-sm font-medium mb-2">Filter by Status:</p>
+                  <div className="flex flex-wrap gap-2">
+                    {(['ALL', 'PENDING', 'APPROVED', 'REJECTED'] as const).map((status) => (
+                      <Button
+                        key={status}
+                        variant={jobStatusFilter === status ? 'default' : 'outline'}
+                        size="sm"
+                        onClick={() => setJobStatusFilter(status)}
+                        className="text-xs"
+                      >
+                        {status} ({jobCounts.status[status]})
+                      </Button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Type Filters */}
+                <div>
+                  <p className="text-sm font-medium mb-2">Filter by Type:</p>
+                  <div className="flex flex-wrap gap-2">
                     <Button
-                      key={status}
-                      variant={jobStatusFilter === status ? 'default' : 'outline'}
+                      variant={jobTypeFilter === 'ALL' ? 'default' : 'outline'}
                       size="sm"
-                      onClick={() => setJobStatusFilter(status)}
+                      onClick={() => setJobTypeFilter('ALL')}
                       className="text-xs"
                     >
-                      {status} ({jobCounts[status]})
+                      All Types ({jobCounts.type.ALL})
                     </Button>
-                  ))}
+                    <Button
+                      variant={jobTypeFilter === 'ACADEMIC_PROJECT' ? 'default' : 'outline'}
+                      size="sm"
+                      onClick={() => setJobTypeFilter('ACADEMIC_PROJECT')}
+                      className="text-xs"
+                    >
+                      Academic ({jobCounts.type.ACADEMIC_PROJECT})
+                    </Button>
+                    <Button
+                      variant={jobTypeFilter === 'STARTUP_COLLABORATION' ? 'default' : 'outline'}
+                      size="sm"
+                      onClick={() => setJobTypeFilter('STARTUP_COLLABORATION')}
+                      className="text-xs"
+                    >
+                      Startup ({jobCounts.type.STARTUP_COLLABORATION})
+                    </Button>
+                    <Button
+                      variant={jobTypeFilter === 'PART_TIME_JOB' ? 'default' : 'outline'}
+                      size="sm"
+                      onClick={() => setJobTypeFilter('PART_TIME_JOB')}
+                      className="text-xs"
+                    >
+                      Part-time ({jobCounts.type.PART_TIME_JOB})
+                    </Button>
+                    <Button
+                      variant={jobTypeFilter === 'COMPETITION_HACKATHON' ? 'default' : 'outline'}
+                      size="sm"
+                      onClick={() => setJobTypeFilter('COMPETITION_HACKATHON')}
+                      className="text-xs"
+                    >
+                      Competition ({jobCounts.type.COMPETITION_HACKATHON})
+                    </Button>
+                  </div>
                 </div>
               </div>
             </CardHeader>
@@ -319,10 +393,10 @@ export function AdminDashboard({ userId }: AdminDashboardProps) {
                             className="bg-green-600 hover:bg-green-700"
                           >
                             <CheckCircle className="h-4 w-4 mr-1" />
-                            Approve
+                            {processingJobId === job.id ? 'Approving...' : 'Approve'}
                           </Button>
                           <Input
-                            placeholder="Rejection reason (optional)"
+                            placeholder="Rejection reason (required for rejection) *"
                             value={rejectionReason[job.id] || ''}
                             onChange={(e) =>
                               setRejectionReason((prev) => ({ ...prev, [job.id]: e.target.value }))
@@ -332,11 +406,17 @@ export function AdminDashboard({ userId }: AdminDashboardProps) {
                           <Button
                             size="sm"
                             variant="destructive"
-                            onClick={() => handleJobAction(job.id, 'reject')}
+                            onClick={() => {
+                              if (!rejectionReason[job.id]?.trim()) {
+                                alert('Please provide a rejection reason')
+                                return
+                              }
+                              handleJobAction(job.id, 'reject')
+                            }}
                             disabled={processingJobId === job.id}
                           >
                             <XCircle className="h-4 w-4 mr-1" />
-                            Reject
+                            {processingJobId === job.id ? 'Rejecting...' : 'Reject'}
                           </Button>
                         </div>
                       )}

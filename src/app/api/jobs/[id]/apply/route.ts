@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { prisma } from '@/lib/prisma'
+import { notifyApplicationReceived } from '@/lib/notifications/service'
+import { calculateMatchScore } from '@/lib/ai/match-scoring'
 
 // POST /api/jobs/[id]/apply - Apply to a job
 export async function POST(
@@ -19,18 +21,39 @@ export async function POST(
     const body = await request.json()
     const { message, resumeUrl } = body
 
-    // Get user's profile
+    // Get user's profile with full details
     const profile = await prisma.profile.findUnique({
-      where: { userId: user.id }
+      where: { userId: user.id },
+      select: {
+        id: true,
+        fullName: true,
+        avatarUrl: true,
+        email: true,
+        bio: true,
+        skills: true,
+        interests: true,
+        department: true,
+        year: true,
+      },
     })
 
     if (!profile) {
       return NextResponse.json({ error: 'Profile not found' }, { status: 404 })
     }
 
-    // Get the job
+    // Get the job with full details
     const job = await prisma.job.findUnique({
-      where: { id: jobId }
+      where: { id: jobId },
+      select: {
+        id: true,
+        title: true,
+        description: true,
+        requirements: true,
+        tags: true,
+        createdById: true,
+        isPublished: true,
+        isFilled: true,
+      },
     })
 
     if (!job) {
@@ -77,14 +100,36 @@ export async function POST(
       )
     }
 
-    // Create the application
+    // Calculate AI match score
+    let matchScore: number | null = null;
+    try {
+      const matchResult = await calculateMatchScore({
+        jobTitle: job.title,
+        jobDescription: job.description,
+        jobRequirements: job.requirements,
+        jobTags: job.tags,
+        applicantSkills: profile.skills,
+        applicantInterests: profile.interests,
+        applicantBio: profile.bio,
+        applicantProposal: message,
+        applicantDepartment: profile.department,
+        applicantYear: profile.year,
+      });
+      matchScore = matchResult.score;
+    } catch (error) {
+      console.error('Error calculating match score:', error);
+      // Continue without match score if AI fails
+    }
+
+    // Create the application with match score
     const application = await prisma.application.create({
       data: {
         jobId,
         applicantId: profile.id,
-        message,
+        proposal: message,
         resumeUrl,
         status: 'PENDING',
+        matchScore,
       },
       include: {
         applicant: {
@@ -111,6 +156,14 @@ export async function POST(
       where: { id: jobId },
       data: { applicationsCount: { increment: 1 } }
     })
+
+    // Notify job owner about new application
+    await notifyApplicationReceived(
+      job.createdById,
+      jobId,
+      job.title,
+      profile.fullName || 'A user'
+    );
 
     return NextResponse.json({ application }, { status: 201 })
   } catch (error) {

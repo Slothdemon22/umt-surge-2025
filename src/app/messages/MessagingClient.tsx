@@ -60,11 +60,20 @@ export function MessagingClient({ userId, userEmail }: MessagingClientProps) {
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault()
     
-    if (!newMessage.trim() || !selectedConversation) return
+    if (!selectedConversation) return
+    
+    const trimmedMessage = newMessage.trim()
+    
+    if (!trimmedMessage) return
+    
+    if (trimmedMessage.length > 2000) {
+      alert('Message must be less than 2000 characters')
+      return
+    }
 
     const message: Message = {
       id: Date.now().toString(),
-      content: newMessage,
+      content: trimmedMessage,
       senderId: userId,
       timestamp: new Date().toISOString(),
       isOwn: true,
@@ -244,6 +253,7 @@ export function MessagingClient({ userId, userEmail }: MessagingClientProps) {
                   onChange={(e) => setNewMessage(e.target.value)}
                   placeholder="Type a message..."
                   className="flex-1"
+                  maxLength={2000}
                 />
                 <Button 
                   type="submit"
@@ -270,6 +280,8 @@ export function MessagingClient({ userId, userEmail }: MessagingClientProps) {
     </div>
   )
 }
+
+
 
 
 

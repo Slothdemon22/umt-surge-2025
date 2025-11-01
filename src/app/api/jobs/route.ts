@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { prisma } from '@/lib/prisma';
 import { JobType } from '@prisma/client';
+import { cookies } from 'next/headers';
 
 interface CreateJobBody {
   title: string;
@@ -44,11 +45,17 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       );
     }
 
-    // Note: After migration, uncomment the isAdmin check
-    // if (profile.role !== 'FINDER' && !profile.isAdmin) {
-    if (profile.role !== 'FINDER') {
+    // Check active role from cookie (multi-role system)
+    const cookieStore = await cookies();
+    const activeRole = cookieStore.get('campusconnect_active_role')?.value as 'SEEKER' | 'FINDER' | undefined;
+    
+    // Use active role if set, otherwise fall back to profile role
+    const currentRole = activeRole || profile.role;
+
+    // Only users in FINDER mode can create jobs
+    if (currentRole !== 'FINDER') {
       return NextResponse.json(
-        { error: 'Only Finders can create jobs' },
+        { error: 'Switch to Finder mode to create jobs' },
         { status: 403 }
       );
     }

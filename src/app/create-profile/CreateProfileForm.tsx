@@ -37,9 +37,33 @@ export function CreateProfileForm({ user }: CreateProfileFormProps) {
     setLoading(true);
     setError(null);
 
-    // Validation
+    // Comprehensive Validation
     if (!formData.fullName.trim()) {
       setError('Full name is required');
+      setLoading(false);
+      return;
+    }
+
+    if (formData.fullName.trim().length < 2) {
+      setError('Full name must be at least 2 characters');
+      setLoading(false);
+      return;
+    }
+
+    if (formData.fullName.trim().length > 100) {
+      setError('Full name must be less than 100 characters');
+      setLoading(false);
+      return;
+    }
+
+    if (!/^[a-zA-Z\s'-]+$/.test(formData.fullName.trim())) {
+      setError('Full name can only contain letters, spaces, hyphens and apostrophes');
+      setLoading(false);
+      return;
+    }
+
+    if (formData.bio.length > 500) {
+      setError('Bio must be less than 500 characters');
       setLoading(false);
       return;
     }
@@ -50,10 +74,40 @@ export function CreateProfileForm({ user }: CreateProfileFormProps) {
       return;
     }
 
+    if (formData.skills.length > 20) {
+      setError('Maximum 20 skills allowed');
+      setLoading(false);
+      return;
+    }
+
+    // Validate each skill
+    for (const skill of formData.skills) {
+      if (skill.length > 50) {
+        setError('Skill name too long (max 50 characters)');
+        setLoading(false);
+        return;
+      }
+    }
+
     if (formData.interests.length === 0) {
       setError('Please add at least one interest');
       setLoading(false);
       return;
+    }
+
+    if (formData.interests.length > 20) {
+      setError('Maximum 20 interests allowed');
+      setLoading(false);
+      return;
+    }
+
+    // Validate each interest
+    for (const interest of formData.interests) {
+      if (interest.length > 50) {
+        setError('Interest name too long (max 50 characters)');
+        setLoading(false);
+        return;
+      }
     }
 
     try {
@@ -147,6 +201,10 @@ export function CreateProfileForm({ user }: CreateProfileFormProps) {
               onChange={(e) => updateField('fullName', e.target.value)}
               placeholder="John Doe"
               required
+              minLength={2}
+              maxLength={100}
+              pattern="[a-zA-Z\s'-]+"
+              title="Full name can only contain letters, spaces, hyphens and apostrophes"
               className="mt-2 glass-input"
             />
           </div>
@@ -164,22 +222,23 @@ export function CreateProfileForm({ user }: CreateProfileFormProps) {
           </div>
         </div>
 
-        <div>
-          <Label htmlFor="bio" style={{ color: 'var(--foreground)' }}>
-            Bio / About Me
-          </Label>
-          <textarea
-            id="bio"
-            value={formData.bio}
-            onChange={(e) => updateField('bio', e.target.value)}
-            placeholder="Tell us about yourself... What are you passionate about? What are your goals?"
-            rows={4}
-            className="mt-2 w-full glass-input resize-none"
-          />
-          <p className="text-sm mt-1" style={{ color: 'var(--foreground-muted)' }}>
-            A good bio helps others understand your background and interests
-          </p>
-        </div>
+          <div>
+            <Label htmlFor="bio" style={{ color: 'var(--foreground)' }}>
+              Bio / About Me
+            </Label>
+            <textarea
+              id="bio"
+              value={formData.bio}
+              onChange={(e) => updateField('bio', e.target.value)}
+              placeholder="Tell us about yourself... What are you passionate about? What are your goals?"
+              rows={4}
+              maxLength={500}
+              className="mt-2 w-full glass-input resize-none"
+            />
+            <p className="text-sm mt-1" style={{ color: 'var(--foreground-muted)' }}>
+              {formData.bio.length}/500 characters - A good bio helps others understand your background
+            </p>
+          </div>
       </div>
 
       {/* Academic Information */}

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { prisma } from '@/lib/prisma';
+import { sendWelcomeEmail } from '@/lib/email/service';
 
 interface CreateProfileBody {
   fullName: string;
@@ -96,6 +97,14 @@ export async function POST(request: NextRequest) {
         year: year || null,
       },
     });
+
+    // Send welcome email (non-blocking)
+    const userEmail = email || user.email
+    if (userEmail) {
+      sendWelcomeEmail(userEmail, fullName.trim()).catch(err => 
+        console.error('Failed to send welcome email:', err)
+      )
+    }
 
     return NextResponse.json(
       { 
