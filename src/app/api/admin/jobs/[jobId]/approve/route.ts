@@ -119,7 +119,8 @@ export async function POST(
           job.createdBy.email,
           job.createdBy.fullName || 'User',
           job.title,
-          job.id
+          job.id,
+          request
         ).catch(err => console.error('Failed to send approval email:', err))
       }
       

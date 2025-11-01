@@ -112,7 +112,8 @@ export async function PATCH(
           application.applicant.fullName || 'User',
           status,
           application.job.title,
-          application.job.id
+          application.job.id,
+          request
         ).catch(err => console.error('Failed to send application status email:', err))
       }
     }

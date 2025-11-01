@@ -80,8 +80,8 @@ export async function POST(
         },
       ],
       mode: 'payment',
-      success_url: `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/jobs/${jobId}?payment=success`,
-      cancel_url: `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/jobs/${jobId}?payment=cancelled`,
+      success_url: `${(await import('@/lib/utils/url')).getAppUrl(request)}/jobs/${jobId}?payment=success`,
+      cancel_url: `${(await import('@/lib/utils/url')).getAppUrl(request)}/jobs/${jobId}?payment=cancelled`,
       metadata: {
         jobId: job.id,
         userId: profile.id,

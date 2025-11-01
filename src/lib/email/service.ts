@@ -70,13 +70,14 @@ export async function sendWelcomeEmail(to: string, userName: string) {
 /**
  * Send job approval email to job poster
  */
-export async function sendJobApprovalEmail(to: string, userName: string, jobTitle: string, jobId: string) {
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
+export async function sendJobApprovalEmail(to: string, userName: string, jobTitle: string, jobId: string, request?: Request) {
+  const { getAppUrl } = await import('@/lib/utils/url')
+  const appUrl = request ? getAppUrl(request) : (process.env.NEXT_PUBLIC_APP_URL || (process.env.NODE_ENV === 'development' ? 'http://localhost:3000' : ''))
   const jobLink = `${appUrl}/jobs/${jobId}`
   return sendEmail({
     to,
     subject: `Your Job "${jobTitle}" has been Approved! ✅`,
-    react: JobApprovedEmail({ userName, jobTitle, jobLink }),
+    react: JobApprovalEmail({ userName, jobTitle, jobLink }),
     html: '',
   })
 }
@@ -113,9 +114,11 @@ export async function sendApplicationReceivedEmail(
   posterName: string,
   applicantName: string,
   jobTitle: string,
-  jobId: string
+  jobId: string,
+  request?: Request
 ) {
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
+  const { getAppUrl } = await import('@/lib/utils/url')
+  const appUrl = request ? getAppUrl(request) : (process.env.NEXT_PUBLIC_APP_URL || (process.env.NODE_ENV === 'development' ? 'http://localhost:3000' : ''))
   const applicationLink = `${appUrl}/jobs/${jobId}/applications`
   
   return sendEmail({
@@ -134,9 +137,11 @@ export async function sendApplicationStatusEmail(
   applicantName: string,
   status: string,
   jobTitle: string,
-  jobId: string
+  jobId: string,
+  request?: Request
 ) {
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
+  const { getAppUrl } = await import('@/lib/utils/url')
+  const appUrl = request ? getAppUrl(request) : (process.env.NEXT_PUBLIC_APP_URL || (process.env.NODE_ENV === 'development' ? 'http://localhost:3000' : ''))
   const jobLink = `${appUrl}/jobs/${jobId}`
   
   const statusLabels: Record<string, string> = {
@@ -161,9 +166,11 @@ export async function sendVideoCallRequestEmail(
   receiverName: string,
   requesterName: string,
   jobTitle: string,
-  message: string
+  message: string,
+  request?: Request
 ) {
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
+  const { getAppUrl } = await import('@/lib/utils/url')
+  const appUrl = request ? getAppUrl(request) : (process.env.NEXT_PUBLIC_APP_URL || (process.env.NODE_ENV === 'development' ? 'http://localhost:3000' : ''))
   const callsLink = `${appUrl}/video-calls`
   
   return sendEmail({
@@ -183,9 +190,11 @@ export async function sendVideoCallAcceptedEmail(
   receiverName: string,
   jobTitle: string,
   callRequestId: string,
-  scheduledTime: string | null
+  scheduledTime: string | null,
+  request?: Request
 ) {
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
+  const { getAppUrl } = await import('@/lib/utils/url')
+  const appUrl = request ? getAppUrl(request) : (process.env.NEXT_PUBLIC_APP_URL || (process.env.NODE_ENV === 'development' ? 'http://localhost:3000' : ''))
   const videoCallLink = `${appUrl}/video-call/${callRequestId}`
   
   return sendEmail({
@@ -222,9 +231,11 @@ export async function sendPaymentSuccessEmail(
   userName: string,
   jobTitle: string,
   amount: number,
-  jobId: string
+  jobId: string,
+  request?: Request
 ) {
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
+  const { getAppUrl } = await import('@/lib/utils/url')
+  const appUrl = request ? getAppUrl(request) : (process.env.NEXT_PUBLIC_APP_URL || (process.env.NODE_ENV === 'development' ? 'http://localhost:3000' : ''))
   const jobLink = `${appUrl}/jobs/${jobId}`
   
   return sendEmail({

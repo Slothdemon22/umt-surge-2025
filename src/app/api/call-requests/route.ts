@@ -135,7 +135,8 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
         job.createdBy.fullName || 'User',
         profile.fullName || 'A user',
         job.title,
-        message || ''
+        message || '',
+        request
       ).catch(err => console.error('Failed to send video call request email:', err))
     }
 

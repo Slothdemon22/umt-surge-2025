@@ -193,7 +193,8 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
         job.createdBy.fullName || 'User',
         profile.fullName || 'A user',
         job.title,
-        jobId
+        jobId,
+        request
       ).catch(err => console.error('Failed to send application email:', err))
     }
 

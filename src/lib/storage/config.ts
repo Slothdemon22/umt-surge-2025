@@ -7,7 +7,15 @@ export const STORAGE_BUCKETS = {
   AVATARS: 'avatars',
 } as const
 
-export const FILE_LIMITS = {
+interface FileLimitsConfig {
+  readonly maxSize: number
+  readonly allowedTypes: string[]
+  readonly allowedExtensions: string[]
+}
+
+type FileCategory = 'IMAGE' | 'VIDEO' | 'DOCUMENT' | 'AVATAR'
+
+export const FILE_LIMITS: Record<FileCategory, FileLimitsConfig> = {
   IMAGE: {
     maxSize: 10 * 1024 * 1024, // 10MB
     allowedTypes: ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/svg+xml'],
@@ -35,7 +43,7 @@ export const FILE_LIMITS = {
     allowedTypes: ['image/jpeg', 'image/png', 'image/webp'],
     allowedExtensions: ['.jpg', '.jpeg', '.png', '.webp'],
   },
-} as const
+}
 
 export const STORAGE_PATHS = {
   user: (userId: string) => `users/${userId}`,

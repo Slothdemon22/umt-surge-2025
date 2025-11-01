@@ -5,9 +5,9 @@ export const RESEND_API_KEY = process.env.RESEND_API_KEY!
 export const SENDER_EMAIL = 'onboarding@zalnex.me' // Your verified Resend sender email
 
 // Email configuration
+// Note: appUrl is now dynamically determined - use getAppUrl() from @/lib/utils/url instead
 export const EMAIL_CONFIG = {
   appName: 'CampusConnect',
-  appUrl: process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000',
   supportEmail: 'support@zalnex.me',
 }
 

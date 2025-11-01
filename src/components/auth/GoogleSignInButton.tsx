@@ -34,18 +34,32 @@ export function GoogleSignInButton({
             access_type: 'offline',
             prompt: 'consent',
           },
+          // Ensure we get user metadata from Google
+          skipBrowserRedirect: false,
         },
       })
 
       if (error) {
-        console.error('Google OAuth error:', error)
-        setError(error.message || 'Failed to sign in with Google')
+        console.error('❌ Google OAuth error:', error)
+        
+        // Provide helpful error messages
+        if (error.message.includes('redirect_uri')) {
+          setError('Google OAuth is not properly configured. Please check the redirect URI settings.')
+        } else {
+          setError(error.message || 'Failed to sign in with Google. Please try again.')
+        }
+        setLoading(false)
+      } else if (data.url) {
+        // Success - redirect to Google
+        // The loading state will persist until redirect happens
+        // No need to set loading to false here as redirect is happening
+        window.location.href = data.url
+      } else {
+        setError('Unable to initiate Google sign-in. Please try again.')
         setLoading(false)
       }
-      // If successful, user will be redirected to Google
-      // Then back to /auth/callback which handles the session
     } catch (err) {
-      console.error('Unexpected error:', err)
+      console.error('❌ Unexpected error in Google sign-in:', err)
       setError('An unexpected error occurred. Please try again.')
       setLoading(false)
     }

@@ -161,7 +161,8 @@ export async function POST(
     })
 
     // Create notification for requester
-    const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
+    const { getAppUrl } = await import('@/lib/utils/url')
+    const appUrl = getAppUrl(request)
     await prisma.notification.create({
       data: {
         userId: callRequest.requesterId,
@@ -188,7 +189,8 @@ export async function POST(
         profile.fullName || 'User',
         callRequest.job.title,
         callRequestId,
-        scheduledTime
+        scheduledTime,
+        request
       ).catch(err => console.error('Failed to send video call accepted email:', err))
     }
 

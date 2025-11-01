@@ -21,9 +21,12 @@ export function CreateProfileForm({ user }: CreateProfileFormProps) {
   const [error, setError] = useState<string | null>(null);
 
   const [formData, setFormData] = useState({
-    fullName: user.user_metadata?.full_name || '',
+    fullName: user.user_metadata?.full_name || 
+              user.user_metadata?.name || 
+              user.email?.split('@')[0] || '',
     email: user.email || '',
-    avatarUrl: user.user_metadata?.avatar_url || '',
+    avatarUrl: user.user_metadata?.avatar_url || 
+               user.user_metadata?.picture || '',
     bio: '',
     skills: [] as string[],
     interests: [] as string[],

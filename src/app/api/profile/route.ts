@@ -75,28 +75,41 @@ export async function POST(request: NextRequest) {
       where: { userId: user.id },
     });
 
+    let profile
+    
     if (existingProfile) {
-      return NextResponse.json(
-        { error: 'Profile already exists' },
-        { status: 409 }
-      );
+      // Update existing profile with new data
+      profile = await prisma.profile.update({
+        where: { userId: user.id },
+        data: {
+          fullName: fullName.trim(),
+          email: email || user.email || existingProfile.email,
+          avatarUrl: avatarUrl || existingProfile.avatarUrl || null,
+          bio: bio?.trim() || existingProfile.bio || null,
+          skills,
+          interests,
+          role,
+          department: department || existingProfile.department || null,
+          year: year || existingProfile.year || null,
+        },
+      })
+    } else {
+      // Create new profile
+      profile = await prisma.profile.create({
+        data: {
+          userId: user.id,
+          fullName: fullName.trim(),
+          email: email || user.email,
+          avatarUrl: avatarUrl || null,
+          bio: bio?.trim() || null,
+          skills,
+          interests,
+          role,
+          department: department || null,
+          year: year || null,
+        },
+      })
     }
-
-    // Create profile
-    const profile = await prisma.profile.create({
-      data: {
-        userId: user.id,
-        fullName: fullName.trim(),
-        email: email || user.email,
-        avatarUrl: avatarUrl || null,
-        bio: bio?.trim() || null,
-        skills,
-        interests,
-        role,
-        department: department || null,
-        year: year || null,
-      },
-    });
 
     // Send welcome email (non-blocking)
     const userEmail = email || user.email

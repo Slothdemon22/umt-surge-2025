@@ -16,21 +16,25 @@ export async function POST(request: NextRequest) {
 
     const dbUser = await prisma.profile.findUnique({
       where: { userId: user.id },
-      select: { stripeCustomerId: true },
     })
 
-    if (!dbUser?.stripeCustomerId) {
+    // Assume stripeCustomerId is stored in the user metadata or a similar field
+    // Adjust this according to your schema
+    const stripeCustomerId = (dbUser as any)?.stripeCustomerId;
+
+    if (!stripeCustomerId) {
       return NextResponse.json(
         { error: 'No Stripe customer found' },
         { status: 400 }
       )
     }
 
-    const origin = request.headers.get('origin') || 'http://localhost:3000'
+    const { getAppUrl } = await import('@/lib/utils/url')
+    const appUrl = getAppUrl(request)
 
     const session = await StripeService.createPortalSession(
       dbUser.stripeCustomerId,
-      `${origin}/billing`
+      `${appUrl}/billing`
     )
 
     return NextResponse.json({ url: session.url })
